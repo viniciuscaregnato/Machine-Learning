@@ -1,0 +1,51 @@
+install.packages("rpart")
+install.packages("rpart.plot")
+library("rpart")
+library("rpart.plot")
+library(ggplot2)
+library(caTools)
+
+data(msleep)
+str(msleep)
+View(msleep)
+
+set.seed(123)
+msleep$sample <- sample.split(msleep$name, SplitRatio = .70)
+
+View(msleep)
+
+novo_data_frame <- msleep[,c(3,6,10,11,12)]
+View(novo_data_frame)
+head(novo_data_frame)
+
+data_treino <- subset(novo_data_frame, sample == TRUE)
+View(data_treino)
+data_teste <- subset(novo_data_frame, sample == FALSE)
+View(data_teste)
+
+#vamos fazer uma regression que preve o total de horas de sono dos animais baseados nas demais variaveis#
+
+modelo_treino <- rpart(sleep_total ~ ., data = data_treino, method = "anova") #funciona parecido com a função lm#
+ #cada tab 1) 6) representa um novo nivel de ramos da arvore#
+ #os asteriscos indicam leaf nodes#
+
+#PARA VISUALIZAR A ARVORE CRIADA#
+
+rpart.plot(modelo_treino, type=2, fallen.leaves = TRUE)
+ #o valor representa a media de horas de sono, e quanto % dos animais estao relacionados a ela#
+
+
+#PARA FAZER PREVISAO COM A ARVORE CRIADA#
+
+previsao_1 <- predict(modelo_treino, data_teste)
+
+#PARA MEDIR A PRECISAO COM MAE#
+
+MAE <- function(verdadeiros, previstos) {mean(abs(verdadeiros - previstos))}
+
+MAE(data_teste$sleep_total, previsao_1)
+
+#COMPARAR OS VALORES PREVISTOS E OBSERVADOS#
+
+comparaçao <- data.frame(valores_observados = data_teste$sleep_total, valores_previstos = previsao_1)
+View(comparaçao)

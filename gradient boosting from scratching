@@ -1,0 +1,82 @@
+install.packages("xgboost")
+install.packages("tree")
+install.packages("caret")
+
+library(xgboost)
+library(tree)
+library(ggplot2)
+library(caret)
+library(randomForest)
+
+mtcars
+View(mtcars)
+View(df)
+
+df <- mtcars
+
+x_vars <- names(df[2:ncol(df)]) #indicar variaveis x
+x_vars <- paste(x_vars, collapse=" + ") #ja organizar a linearidade
+
+x_vars
+
+#HYPERPARAMETERS and commandings#
+nrounds <- 10
+
+prediction <- NaN
+df <- cbind(df[1], prediction, df[2:ncol(df)])
+
+df$prediction #coluna com a previsao ate dado momento
+
+LR <- 0.1 #learnin rate 
+
+
+#ROUND 1#
+df$pred_1 <- mean(df$mpg)
+df$resid_1 <- (df$mpg - df$pred_1)
+
+df$prediction <- df$pred_1
+df$resid_1 <- (df$mpg - df$prediction)
+
+
+rmse <- RMSE(df$prediction, df$mpg)
+results <- data.frame("round" = c(1), "RMSE"=c(rmse)  )
+
+
+for(i in 2:nrounds) {
+  model <- eval(parse(text = paste0("tree(resid_", i-1, "~", x_vars, ", data=df)")))
+  df[[paste0("pred_", i)]] <- predict(model, df)
+  
+  df$prediction <- df$prediction + LR*df[[paste0("pred_", i)]]
+
+  df[[paste0("resid_", i)]] <- (df$mpg - (df$prediction))
+  
+ 
+  rmse <- RMSE(df$prediction, df$mpg)
+  results <- rbind(results, list("round"=i, "RMSE"=rmse)  )
+  
+}
+
+##looking at the graph##
+ggplot(results, aes(x = round, y = RMSE)) + 
+  geom_line() +  # Linha para mostrar a relação
+  labs(x = "Número de Rounds", y = "RMSE", title = "Gráfico de RMSE por Round")
+
+
+
+##COMPARING TO OTHER MODELS##
+
+tree_model <- eval(parse(text = paste0("tree(df$mpg~", x_vars, ", data=df)")))
+tree_pred <- predict( tree_model, df)
+tree_rmse <- RMSE(df$prediction, df$mpg)
+
+rf_model <- eval(parse(text = paste0("randomForest(df$mpg~", x_vars, ", data=df)")))
+rf_pred <- predict(rf_model, df)
+rf_rmse <- RMSE(df$prediction, df$mpg)
+
+ggplot() + 
+  geom_line(data=df, aes(x=round, y=rmse))+
+  geom_hline(yintercept = tree_rmse, color="red", linetype="dashed") +
+  geom_hline(yintercept = rf_rmse, color="blue", linetype="dashed")
+
+VIDEO DO YOUTBE
+  https://www.youtube.com/watch?v=d6CzVXoVZCc&list=PLnI7mgeWwXmMuBMfmX9oYdxZr4KNfP56f&index=3

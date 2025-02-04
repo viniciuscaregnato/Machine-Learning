@@ -15,7 +15,7 @@ View(df)
 df <- mtcars
 
 x_vars <- names(df[2:ncol(df)]) #indicar variaveis x
-x_vars <- paste(x_vars, collapse=" + ") #ja organizar a linearidade
+x_vars <- paste(x_vars, collapse=" + ") #indicar os nomes separados por +
 
 x_vars
 

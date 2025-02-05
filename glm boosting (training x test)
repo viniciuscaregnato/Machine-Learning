@@ -1,0 +1,38 @@
+library(mboost)
+library(caTools)
+
+data <- data.frame(mtcars)
+
+set.seed(123)
+
+data$sample <- sample.split(data$mpg, SplitRatio = 0.7)
+
+View(data)
+training_data <- subset(data, sample == TRUE)
+test_data <- subset(data, sample == FALSE)
+
+x_vars <- names(data[2:ncol(data)])
+x_vars <- paste(x_vars, collapse = "+")
+
+formula <- as.formula(paste("mpg ~", x_vars))
+
+model <- glmboost(formula, data = training_data)
+
+grafico <- plot(model)
+
+previsao <- predict(model, test_data)
+
+grafico_previsao <- plot(previsao)
+
+ordem <- order(test_data$mpg)
+View(test_data)
+
+plot(test_data$mpg[ordem], previsao[ordem], 
+     xlab = "Valores Observados", 
+     ylab = "Valores Previstos",
+     main = "Valores Observados vs. Previstos",
+     col = "blue", pch = 16)
+
+points(test_data$mpg, test_data$mpg, col = "black", pch = 4)
+
+lines(test_data$mpg[ordem], previsao[ordem], col = "red", lwd = 2)

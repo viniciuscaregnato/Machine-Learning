@@ -1,0 +1,51 @@
+
+#GRADIENT BOOSTING MACHINE REGRESSION DATA#
+# reproduction of Diego Fernandez Garcia's class
+# https://www.youtube.com/watch?v=pSZNFdjJbB0
+
+#### Loading packages ####
+library(quantmod)
+library(gbm)
+library(readxl)
+library(tseries)
+library(xts)
+library(zoo)
+
+#### Reading data ####
+
+preciopm <- read_excel("C:/Users/celia/Downloads/preciopm.xls")
+
+View(preciopm)
+
+datas <- seq(from = as.Date("1990-01-01"), by = "month", length.out = nrow(preciopm))
+
+preciopm <- data.frame(daTa = datas, precio = preciopm$precio)
+
+dados <- xts(preciopm[,2], order.by = preciopm[,1])
+View(dados)
+
+#### Target and predict features ####
+
+rprecio_y <- monthlyReturn(dados) #target feature = variação atual
+rprecio1_x<- lag(rprecio_y, k=1) #predictor feature = variação passada, com lag=1
+rprecioall <- cbind(rprecio_y, rprecio1_x)
+colnames(rprecioall) <- c("rprecio_y", "rprecio1_x")
+rprecioall <- na.exclude(rprecioall)
+
+
+head(dados)
+head(rprecio)
+
+
+#### Training and Testing Ranges ####
+
+rprecioTr <- window(rprecioall, end = "2012-04-01")
+rprecioTest <- window(rprecioall, start = "2012-04-01")
+
+####Gradient Boosting Machine Regression ####
+
+gbmTr <- gbm(rprecio_y ~ rprecio1_x, distribution = "gaussian", data = rprecioTr, n.trees = 2, shrinkage = 0.1, bag.fraction = 1)
+gbmTr$train.error
+
+
+
